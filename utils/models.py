@@ -38,9 +38,9 @@ class Role_doctor(Base):
     rating_avg = Column(Float)
     accepted = Column(Boolean)
     cv_path = Column(TEXT, nullable=True)  
-    number_of_review = Column(Integer, nullable=False)
-    rating_sum = Column(Integer, nullable=False)
-    
+    number_of_review = Column(Integer, nullable=True)
+    rating_sum = Column(Integer, nullable=True)
+
 class Check_request(Base):
     __tablename__ = "check_request"
     email = Column(TEXT, primary_key=True)

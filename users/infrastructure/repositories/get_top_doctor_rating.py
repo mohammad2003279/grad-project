@@ -2,10 +2,9 @@ from users.repositories.get_most_avg_rate import DoctorRepository
 from utils.models import Role_doctor, User
 from sqlalchemy.orm import Session
 from core.exceptions.exceptions import EntityNotFound
-class DoctorRepositoryImpl(DoctorRepository):
+class DoctorRepositoryImpls(DoctorRepository):
     def __init__(self, session: Session):
         self.session = session
-
     def get_top_rated_doctors(self, limit: int = 5):
         result = (
             self.session.query(Role_doctor, User.f_name, User.l_name)

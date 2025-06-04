@@ -4,7 +4,7 @@ from utils.models import User
 from users.entities.user_entites import UserEntity
 import redis
 import json
-
+from core.exceptions.exceptions import EntityNotFound
 class UserInformationRepositorySQL(UserInformationRepository):
     def __init__(self, session: Session):
         self.session = session
@@ -26,7 +26,7 @@ class UserInformationRepositorySQL(UserInformationRepository):
             return data_body["profile_picture"]
         db_model = self.session.query(User).filter_by(user_id=user_id).first()
         if not db_model:
-            raise ValueError(f"User with id {user_id} not found.")
+            raise EntityNotFound
         data_body = {"user_id": db_model.user_id, "f_name": db_model.f_name, "l_name": db_model.l_name, # type: ignore
                       "role": db_model.role, "age": db_model.age, "profile_picture": db_model.profile_picture, "email": db_model.email,
                       "signup_date": str(db_model.signup_date), "suspension": db_model.suspension} # type: ignore

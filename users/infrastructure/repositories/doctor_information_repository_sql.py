@@ -4,7 +4,7 @@ from utils.models import Role_doctor, User
 from users.entities.user_entites import UserEntity, DoctorEntity
 import redis
 import json
-from core.exceptions.exceptions import UserNotFound
+from core.exceptions.exceptions import UserNotFound,EntityNotFound
 
 class DoctorInformationRepositorySQL(DoctorInformationRepository):
     def __init__(self, session: Session):
@@ -37,11 +37,12 @@ class DoctorInformationRepositorySQL(DoctorInformationRepository):
             data_body = dict(json.loads(cached_data)) # type: ignore
             return str(data_body["bio"])
         db_model = self.session.query(Role_doctor).filter_by(doctor_id=doctor_id).first()
-        data_body = {"bio": db_model.bio, "rating_avg": db_model.rating_avg, # type: ignore
-                      "accepted": db_model.accepted, "review": db_model.number_of_review, "rating sum": db_model.rating_sum} # type: ignore
-        self.redis_server.set(cache_key, json.dumps(data_body), ex=300) #type: ignore
-        return str(db_model.bio) #type: ignore
-    
+        if db_model:
+            data_body = {"bio": db_model.bio, "rating_avg": db_model.rating_avg, # type: ignore
+                        "accepted": db_model.accepted, "review": db_model.number_of_review, "rating sum": db_model.rating_sum} # type: ignore
+            self.redis_server.set(cache_key, json.dumps(data_body), ex=300) #type: ignore
+            return str(db_model.bio) #type: ignore
+        raise EntityNotFound
     def rate_doctor(self, doctor_id, rate):
         cache_key = f"doctorID:{doctor_id}"
         cached_data = self.redis_server.get(cache_key)

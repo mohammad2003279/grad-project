@@ -19,6 +19,7 @@ from users.infrastructure.repositories.user_information_repository_sql import Us
 from users.infrastructure.repositories.appointment_repository_Sql import AppointmentRepositoryImpl
 from users.infrastructure.repositories.cv_doctor_sql import DoctorRepositoryImpl
 from users.infrastructure.repositories.reports_sql import UserReportRepositorySql
+from users.infrastructure.repositories.get_top_doctor_rating import DoctorRepositoryImpls
 #############################################################################################################################
 ######## Use cases###########################################################################################################
 from users.use_cases.check_account_validated import CheckAccountValidation
@@ -32,6 +33,7 @@ from users.use_cases.validate_user import validate_doctor_role
 from users.use_cases.upload_cv import UploadCVUseCase
 from users.use_cases.report_a_user import ReportUsers
 from users.use_cases.reports_type import ReportType
+from users.use_cases.get_top_rating import DoctorUseCase
 #############################################################################################################################
 ######## Schemas ############################################################################################################
 from users.schemas.create_account_schema import CreateAccountSchema, AppointmentCreateRequest, AppointmentResponse
@@ -83,6 +85,7 @@ async def upload_profile_picture(request: Request, user: user_dependency, db: db
         repo = UserInformationRepositorySQL(db)
         use_case = PostUserPicture(repo)
         await use_case.execute(user["id"], file)
+        return {"message":"pictuire uploaded successfully"}
     except UnSupportedFormat:
         raise HTTPUnsupportedFileFormat()
     except AppException:
@@ -144,10 +147,12 @@ async def get_doctor_result(db: db_dependency, user: dict = Depends(get_current_
 
 @router.get("/info/doctor-bio", status_code=200)
 async def get_doctor_bio(db: db_dependency, doctor_id: int):
-    repo = DoctorInformationRepositorySQL(db)
-    use_case = GetDoctorBio(repo)
-    return {"Bio": use_case.execute(doctor_id=doctor_id)}
-
+    try :
+        repo = DoctorInformationRepositorySQL(db)
+        use_case = GetDoctorBio(repo)
+        return {"Bio": use_case.execute(doctor_id=doctor_id)}
+    except EntityNotFound:
+        raise HTTPUserNotFound()
 @router.get("/get/user-profile-picture", status_code=200)
 async def get_user_profile_picture(db: db_dependency, user_id: int):
     try:
@@ -156,10 +161,7 @@ async def get_user_profile_picture(db: db_dependency, user_id: int):
         image_path = use_case.execute(user_id)
         return FileResponse(path=image_path, media_type="image/jpeg")
     except EntityNotFound:
-        return None
-    except ValueError:
-        raise HTTPUserNotFound()
-
+        return {"there is no profile picture for this user or maybe this user dose not exist"}
 @router.get("/get/user-info/get-user-basic-info", status_code=200)
 async def get_user_basic_information(db: db_dependency, user: user_dependency):
     try:
@@ -224,11 +226,25 @@ async def rate_doctor(request: Request, user: user_dependency, db: db_dependency
         raise HTTPUserNotFound()
 
 @router.get("/top-rated-doctors")
-def get_top_rated_doctors(db: db_dependency, user: dict = Depends(get_current_user)):
-    repo = DoctorsRepositorySQL(db)
-    use_case = GetTopRatedDoctors(repo)
-    doctors = use_case.execute(5)
-    return {"doctors": doctors}
+def get_top_rated_doctors(db: db_dependency,user: dict = Depends(get_current_user)):
+    doctors =[]
+    try:
+        repo = DoctorRepositoryImpls(db)
+        use_case = DoctorUseCase(repo)
+        top_doctors = use_case.get_top_five_doctors()
+        
+        doctors= [
+            {
+                "doctor_id": doctor.Role_doctor.doctor_id,
+                "rating_avg": doctor.Role_doctor.rating_avg,
+                "name": doctor.f_name + " " + doctor.l_name,
+                "doctor_bio":doctor.Role_doctor.bio
+            }
+            for doctor in top_doctors
+        ]
+        return doctors
+    except EntityNotFound:
+        raise HTTPDoctorNotFound()
 
 @router.post("/upload-cv", status_code=201)
 @limiter.limit("3/minute")
@@ -238,7 +254,7 @@ async def upload_cv(request: Request, db: db_dependency, file: UploadFile = File
     use_case = UploadCVUseCase(repo)
     try:
         await use_case.execute(user["id"], file)
-        return {'messages':'hi'}
+        return {'messages':'your cv uploaded successfully'}
     except UnSupportedFormat:
         raise HTTPUnsupportedFileFormat()
     except FailedToSaveFile:
