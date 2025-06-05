@@ -171,6 +171,5 @@ class HTTPNoAppointmentsNotFound(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="There is no appointment in this ID"
+            detail="There is no appointment at this ID"
         )
-    

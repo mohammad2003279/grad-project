@@ -20,6 +20,7 @@ from users.infrastructure.repositories.appointment_repository_Sql import Appoint
 from users.infrastructure.repositories.cv_doctor_sql import DoctorRepositoryImpl
 from users.infrastructure.repositories.reports_sql import UserReportRepositorySql
 from users.infrastructure.repositories.get_top_doctor_rating import DoctorRepositoryImpls
+from users.infrastructure.repositories.get_user_appointments_sql import AppointmentPatientRepoSql
 #############################################################################################################################
 ######## Use cases###########################################################################################################
 from users.use_cases.check_account_validated import CheckAccountValidation
@@ -34,6 +35,7 @@ from users.use_cases.upload_cv import UploadCVUseCase
 from users.use_cases.report_a_user import ReportUsers
 from users.use_cases.reports_type import ReportType
 from users.use_cases.get_top_rating import DoctorUseCase
+from users.use_cases.user_appointments import AppointmentsUseCase
 #############################################################################################################################
 ######## Schemas ############################################################################################################
 from users.schemas.create_account_schema import CreateAccountSchema, AppointmentCreateRequest, AppointmentResponse
@@ -194,7 +196,7 @@ def create_appointment(request: Request, doctor_id: int, db: db_dependency, user
         raise HTTPDoctorNotFound()
 
 @router.get("/doctor-appointments", response_model=List[AppointmentResponse])
-def get_user_appointments(db: db_dependency, user: dict = Depends(get_current_user)):
+def get_doctor_appointments(db: db_dependency, user: dict = Depends(get_current_user)):
     try:
         validate_doctor_role(user)
         repo = AppointmentRepositoryImpl(db)
@@ -209,9 +211,9 @@ def accept_appointment(appointment_id: int, db: db_dependency, user: dict = Depe
         validate_doctor_role(user)
         repo = AppointmentRepositoryImpl(db)
         use_case = AppointmentUseCase(repo)
-        return use_case.accept_appointment(appointment_id)
+        return use_case.accept_appointment(appointment_id,user['id'])
     except EntityNotFound:
-        raise HTTPNoAppointmentsNotFound
+        raise HTTPNoAppointmentsNotFound()
 
 @router.put("/rate/doctor-rating/{doctor_id}/{rate}", status_code=201)
 @limiter.limit("5/minute")
@@ -270,3 +272,20 @@ def report_users(request: Request, report_type: ReportType, description: str, re
         return {'message': 'your report submitted successfully'}
     except EntityNotFound:
         raise HTTPUserNotFound()
+
+@router.get("/get-patient-appointments",status_code=200)
+def get_patient_appointments(request:Request,db: db_dependency, user: dict = Depends(get_current_user)):
+    try:
+        repo = AppointmentPatientRepoSql(db)
+        use_case = AppointmentsUseCase(repo)
+        return use_case.list_appointments_for_patient(user['id'])
+    except EntityNotFound:
+        raise HTTPNoAppointmentsFound
+@router.get("/cancel-appointments",status_code=200)
+def cancel_appointments(request:Request,appointment_id:int,db: db_dependency, user: dict = Depends(get_current_user)):
+    try:
+        repo = AppointmentPatientRepoSql(db)
+        use_case = AppointmentsUseCase(repo)
+        return use_case.cancel_appointments(appointment_id,user['id'])
+    except EntityNotFound:
+        raise HTTPNoAppointmentsFound

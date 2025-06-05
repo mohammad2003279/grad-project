@@ -12,5 +12,5 @@ class AppointmentUseCase:
     def list_appointments_for_doctor(self, doctor_id: int) -> List[AppointmentEntity]:
         return self.repo.get_all_appointments(doctor_id)
 
-    def accept_appointment(self, appointment_id: int) -> AppointmentEntity:
-        return self.repo.accept_appointment(appointment_id)
+    def accept_appointment(self, appointment_id: int,user_id:int) -> AppointmentEntity:
+        return self.repo.accept_appointment(appointment_id,user_id)

@@ -11,5 +11,5 @@ class IAppointmentRepository(ABC):
     def get_all_appointments(self, doctor_id: int) -> List[AppointmentEntity]:
         pass
     @abstractmethod
-    def accept_appointment(self, appointment_id: int) -> AppointmentEntity:
+    def accept_appointment(self, appointment_id: int,user_id:int) -> AppointmentEntity:
         pass

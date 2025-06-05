@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from users.entities.user_entites import AppointmentEntity
 from users.repositories.appointment_repository import IAppointmentRepository
 from utils.models import AppointmentModel,User,Role_doctor
-from core.exceptions.exceptions import EntityNotFound,DoctorNotAccepted
+from core.exceptions.exceptions import EntityNotFound,DoctorNotAccepted,UnAuthorizedAccess
 
 class AppointmentRepositoryImpl(IAppointmentRepository):
     def __init__(self, session: Session):
@@ -69,21 +69,23 @@ class AppointmentRepositoryImpl(IAppointmentRepository):
             )
         
         return result
-    def accept_appointment(self, appointment_id: int) -> AppointmentEntity:
+    def accept_appointment(self, appointment_id: int,user_id:int) -> AppointmentEntity:
         appointment = self.session.query(AppointmentModel).filter_by(id=appointment_id).first()
         if appointment is None:
             raise EntityNotFound
-        appointment.status = "accepted"
-        self.session.commit()
-        self.session.refresh(appointment)
-        doctorname = self.session.query(User).filter_by(user_id=appointment.doctor_id).first()
-        patientname=self.session.query(User).filter_by(user_id=appointment.user_id).first()
-        return AppointmentEntity(
-            patientname=patientname.f_name+' '+patientname.l_name,
-            appointment_id=appointment.id,
-            user_id=appointment.user_id,
-            doctor_id=appointment.doctor_id,
-            appointment_date=appointment.appointment_date,
-            status=appointment.status,
-            doctorname=doctorname.f_name+' '+doctorname. l_name
-        )
+        if user_id == appointment.doctor_id:
+            appointment.status = "accepted"
+            self.session.commit()
+            self.session.refresh(appointment)
+            doctorname = self.session.query(User).filter_by(user_id=appointment.doctor_id).first()
+            patientname=self.session.query(User).filter_by(user_id=appointment.user_id).first()
+            return AppointmentEntity(
+                patientname=patientname.f_name+' '+patientname.l_name,
+                appointment_id=appointment.id,
+                user_id=appointment.user_id,
+                doctor_id=appointment.doctor_id,
+                appointment_date=appointment.appointment_date,
+                status=appointment.status,
+                doctorname=doctorname.f_name+' '+doctorname. l_name
+            )
+        raise EntityNotFound
