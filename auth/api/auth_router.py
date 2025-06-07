@@ -124,11 +124,11 @@ async def refresh_access_token(refresh_token: str, db: db_dependency, user: user
         raise HTTPUserSuspended()
     
 
-@router.delete("/logout", status_code=201)
-async def logout(refresh_token: str, db: db_dependency):
-    try:
-        repo = RefreshTokenRepositorySQL(db)
-        use_case = Logout(repo)
-        use_case.execute(refresh_token)
-    except TokenNotFound:
-        raise HTTPTokenNotFound()
+# @router.delete("/logout", status_code=201)
+# async def logout(refresh_token: str, db: db_dependency):
+#     try:
+#         repo = RefreshTokenRepositorySQL(db)
+#         use_case = Logout(repo)
+#         use_case.execute(refresh_token)
+#     except TokenNotFound:
+#         raise HTTPTokenNotFound()

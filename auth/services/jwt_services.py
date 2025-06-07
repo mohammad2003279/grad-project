@@ -32,7 +32,7 @@ class AccessTokenGenerator:
             return {'sub': name, 'id': user_id, 'role': user_role, 'exp': expiration}
         except JWTError:
             raise HTTPException(status_code=404, detail=f"an error occurred : {JWTError}")
-        
+
 
 
 class RefreshTokenGenerator:

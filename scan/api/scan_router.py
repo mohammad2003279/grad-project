@@ -14,7 +14,7 @@ from infrastructure.db.dependencies import db_dependency
 #############################################################################################################################
 ###### Exceptions ###########################################################################################################
 from core.exceptions.exceptions import ImageNotSupported, UnSupportedFormat, AppException
-from core.exceptions.http_exceptions import HTTPImageNotSupported, HTTPUnsupportedFileFormat, HTTPFailedToFetchImage
+from core.exceptions.http_exceptions import HTTPImageNotSupported, HTTPUnsupportedFileFormat, HTTPFailedToFetchImages
 #############################################################################################################################
 #############################################################################################################################
 
@@ -38,4 +38,6 @@ async def scan_sample_image(db: db_dependency, user: user_dependency, file: Uplo
     except UnSupportedFormat:
         raise HTTPUnsupportedFileFormat()
     except AppException:
-        raise HTTPFailedToFetchImage()
+        raise HTTPFailedToFetchImages()
+
+        #will fix it later

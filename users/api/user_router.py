@@ -21,6 +21,7 @@ from users.infrastructure.repositories.cv_doctor_sql import DoctorRepositoryImpl
 from users.infrastructure.repositories.reports_sql import UserReportRepositorySql
 from users.infrastructure.repositories.get_top_doctor_rating import DoctorRepositoryImpls
 from users.infrastructure.repositories.get_user_appointments_sql import AppointmentPatientRepoSql
+from users.infrastructure.repositories.get_user_records_sql import ReadTestRecordsRepositoriesSql
 #############################################################################################################################
 ######## Use cases###########################################################################################################
 from users.use_cases.check_account_validated import CheckAccountValidation
@@ -36,12 +37,13 @@ from users.use_cases.report_a_user import ReportUsers
 from users.use_cases.reports_type import ReportType
 from users.use_cases.get_top_rating import DoctorUseCase
 from users.use_cases.user_appointments import AppointmentsUseCase
+from users.use_cases.get_user_records_info import GetRecordsByUserId
 #############################################################################################################################
 ######## Schemas ############################################################################################################
 from users.schemas.create_account_schema import CreateAccountSchema, AppointmentCreateRequest, AppointmentResponse
 #############################################################################################################################
 ######### Exceptions ########################################################################################################
-from core.exceptions.http_exceptions import HTTPUnAuthorizedCreateAccount, HTTPPasswordNewNotValid, HTTPPassswordNotMatch, HTTPUnAuthorizedUser, HTTPUnsupportedFileFormat, HTTPFailedToUploadPicture, HTTPFailedToFetchImage, HTTPInvalidVerificationCode, HTTPUserNotFound, HTTPDoctorNotAccepted, HTTPDoctorNotFound, HTTPNoAppointmentsFound, HTTPNoAppointmentsNotFound, HTTPFailedToUploadCV
+from core.exceptions.http_exceptions import HTTPUnAuthorizedCreateAccount, HTTPPasswordNewNotValid, HTTPPassswordNotMatch, HTTPUnAuthorizedUser, HTTPUnsupportedFileFormat, HTTPFailedToUploadPicture, HTTPFailedToFetchImage, HTTPInvalidVerificationCode, HTTPUserNotFound, HTTPDoctorNotAccepted, HTTPDoctorNotFound, HTTPNoAppointmentsFound, HTTPNoAppointmentsNotFound, HTTPFailedToUploadCV,HTTPRecordNotFound
 from core.exceptions.exceptions import UnAuthorizedCreateAccount, PasswordNewNotValid, PasswordNotMatch, UnAuthorizedAccess, AppException, UnSupportedFormat, EntityNotFound, UserNotFound, FailedToSaveFile, DoctorNotAccepted
 #############################################################################################################################
 ########## Dependencies #####################################################################################################
@@ -228,7 +230,7 @@ async def rate_doctor(request: Request, user: user_dependency, db: db_dependency
         raise HTTPUserNotFound()
 
 @router.get("/top-rated-doctors")
-def get_top_rated_doctors(db: db_dependency,user: dict = Depends(get_current_user)):
+def get_doctors(db: db_dependency,user: dict = Depends(get_current_user)):
     doctors =[]
     try:
         repo = DoctorRepositoryImpls(db)
@@ -289,3 +291,11 @@ def cancel_appointments(request:Request,appointment_id:int,db: db_dependency, us
         return use_case.cancel_appointments(appointment_id,user['id'])
     except EntityNotFound:
         raise HTTPNoAppointmentsFound
+
+@router.get("/user/record")
+def get_records_by_user_id(db: db_dependency, user: dict = Depends(get_current_user)):
+    try:
+        usecase = GetRecordsByUserId(repo=ReadTestRecordsRepositoriesSql(db))
+        return usecase.execute(user["id"])
+    except:
+        raise HTTPRecordNotFound

@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from users.schemas.schema import RecordsInfo
 class UserEntity:
     def __init__(self, user_id: int = None, f_name: str = None, l_name: str = None, hashed_password: str = None, status: bool = None, #type: ignore
                   role: str = None, age: int = None, email: str = None, profile_picture: str = None): #type: ignore
@@ -49,4 +49,8 @@ class ReportEntity:
         self.user_reported = user_reported
         self.discreption = discreption
         self.report_type = report_type
-        
+
+
+class UserRecordsEntities:
+    def __init__(self,records_info:RecordsInfo):
+        self.records_info=records_info

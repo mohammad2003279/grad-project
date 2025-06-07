@@ -100,6 +100,13 @@ class HTTPFailedToFetchImage(HTTPException):
             detail = "Failed to fetch profile picture."
         )
 
+class HTTPFailedToFetchImages(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code = status.HTTP_501_NOT_IMPLEMENTED,
+            detail = "sry something went wrong pls try again ."
+        )
+
 class HTTPImageNotSupported(HTTPException):
     def __init__(self):
         super().__init__(
